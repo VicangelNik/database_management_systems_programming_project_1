@@ -1,4 +1,4 @@
-package com.vicangel.database_management_systems_pp1.infrastructure.postgress.repository.entity;
+package com.vicangel.database_management_systems_pp1.infrastructure.postgress.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Entity
 @Table(name = "reported_crimes")
-public class ReportedCrimes {
+public class ReportedCrimesEntity {
 
   @Id
   @Column(name = "rd_no")

@@ -3,8 +3,8 @@ package com.vicangel.database_management_systems_pp1.infrastructure.postgress.re
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.vicangel.database_management_systems_pp1.infrastructure.postgress.repository.entity.ReportedCrimes;
+import com.vicangel.database_management_systems_pp1.infrastructure.postgress.entity.ReportingDistrictsEntity;
 
 @Repository
-public interface ReportedCrimesRepo extends JpaRepository<ReportedCrimes, Long> {
+public interface ReportingDistrictsRepository extends JpaRepository<ReportingDistrictsEntity, Long> {
 }
