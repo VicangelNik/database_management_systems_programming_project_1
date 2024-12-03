@@ -9,9 +9,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public final class TotalReportsPerCrimeBetweenTimeOccurrenceResponse {
+public final class TotalCrimesPerHourResponse {
 
-  private Integer crimeCode;
-  private String crimeDescription;
-  private Integer total;
+  private String perHour;
+  private Integer totalCrimes;
 }
