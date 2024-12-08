@@ -1,16 +1,17 @@
 package com.vicangel.database_management_systems_pp1.rest.dto.response;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Builder
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public final class TotalCrimesPerHourResponse {
+public final class Response12 {
 
-  private String perHour;
-  private Integer totalCrimes;
+  private String dateReported;
+  private Integer weaponCode;
+  private String weaponDescription;
+  private Integer areaCount;
+  private Integer count;
 }
