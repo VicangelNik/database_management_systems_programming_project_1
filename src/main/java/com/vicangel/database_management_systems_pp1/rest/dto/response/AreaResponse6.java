@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public final class Response6 {
+public final class AreaResponse6 {
 
-  private String areasOrDistricts;
+  private String areaName;
   private Integer totalCrimes;
 }

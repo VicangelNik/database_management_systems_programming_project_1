@@ -6,11 +6,14 @@ import java.util.List;
 
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
 
 import com.vicangel.database_management_systems_pp1.model.ReportedCrime;
 import com.vicangel.database_management_systems_pp1.rest.dto.request.BoundingBoxRequest;
+import com.vicangel.database_management_systems_pp1.rest.dto.response.AreaResponse6;
+import com.vicangel.database_management_systems_pp1.rest.dto.response.DistrictResponse6;
 import com.vicangel.database_management_systems_pp1.rest.dto.response.Response1;
 import com.vicangel.database_management_systems_pp1.rest.dto.response.Response10;
 import com.vicangel.database_management_systems_pp1.rest.dto.response.Response11;
@@ -19,7 +22,6 @@ import com.vicangel.database_management_systems_pp1.rest.dto.response.Response2;
 import com.vicangel.database_management_systems_pp1.rest.dto.response.Response3;
 import com.vicangel.database_management_systems_pp1.rest.dto.response.Response4;
 import com.vicangel.database_management_systems_pp1.rest.dto.response.Response5;
-import com.vicangel.database_management_systems_pp1.rest.dto.response.Response6;
 import com.vicangel.database_management_systems_pp1.rest.dto.response.Response7;
 import com.vicangel.database_management_systems_pp1.rest.dto.response.Response8;
 import com.vicangel.database_management_systems_pp1.rest.dto.response.Response9;
@@ -29,57 +31,70 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ReportedCrimeRepository {
 
+  private static final RowMapper<Response1> mapperResponseQuery1 = BeanPropertyRowMapper.newInstance(Response1.class);
+  private static final RowMapper<Response2> mapperResponseQuery2 = BeanPropertyRowMapper.newInstance(Response2.class);
+  private static final RowMapper<Response3> mapperResponseQuery3 = BeanPropertyRowMapper.newInstance(Response3.class);
+  private static final RowMapper<Response4> mapperResponseQuery4 = BeanPropertyRowMapper.newInstance(Response4.class);
+  private static final RowMapper<Response5> mapperResponseQuery5 = BeanPropertyRowMapper.newInstance(Response5.class);
+  private static final RowMapper<AreaResponse6> mapperAreaResponseQuery6 = BeanPropertyRowMapper.newInstance(AreaResponse6.class);
+  private static final RowMapper<DistrictResponse6> mapperDistrictResponseQuery6 = BeanPropertyRowMapper.newInstance(DistrictResponse6.class);
+  private static final RowMapper<Response7> mapperResponseQuery7 = BeanPropertyRowMapper.newInstance(Response7.class);
+  private static final RowMapper<Response8> mapperResponseQuery8 = BeanPropertyRowMapper.newInstance(Response8.class);
+  private static final RowMapper<Response9> mapperResponseQuery9 = BeanPropertyRowMapper.newInstance(Response9.class);
+  private static final RowMapper<Response10> mapperResponseQuery10 = BeanPropertyRowMapper.newInstance(Response10.class);
+  private static final RowMapper<Response11> mapperResponseQuery11 = BeanPropertyRowMapper.newInstance(Response11.class);
+  private static final RowMapper<Response12> mapperResponseQuery12 = BeanPropertyRowMapper.newInstance(Response12.class);
   private final JdbcTemplate jdbcTemplate;
 
   public List<ReportedCrime> findReportedCrimes() {
     return jdbcTemplate
-      .query("SELECT * from reported_crimes", BeanPropertyRowMapper.newInstance(ReportedCrime.class));
+      .query("SELECT * FROM reported_crimes", BeanPropertyRowMapper.newInstance(ReportedCrime.class));
   }
 
-  public List<Response1> findTotalReportsPerCrimeBetweenTimeOccurrence(
+  public List<Response1> findTotalReportsPerCrimeBetweenTimeOccurrenceQuery1(
     LocalDateTime from,
     LocalDateTime to) {
     return jdbcTemplate
       .query("""
-               SELECT cc.crm_cd crime_code, cc.crm_cd_desc crime_description, count(*) total
+               SELECT cc.crm_cd crime_code, cc.crm_cd_desc crime_description, COUNT(*) total
                FROM reported_crimes rc
-                        inner join public.reported_crimes_crime_codes rccc ON rc.dr_no = rccc.dr_no
-                        inner join public.crime_codes cc ON cc.crm_cd = rccc.crm_cd
+                        INNER JOIN public.reported_crimes_crime_codes rccc ON rc.dr_no = rccc.dr_no
+                        INNER JOIN public.crime_codes cc ON cc.crm_cd = rccc.crm_cd
                WHERE rc.occ_date_time BETWEEN ? AND ?
                GROUP BY cc.crm_cd
-               """, BeanPropertyRowMapper.newInstance(Response1.class), from, to);
+               """, mapperResponseQuery1, from, to);
   }
 
-  public List<Response2> findTotalReportsForCrimeCodeBetweenReportedDate(
+  public List<Response2> findTotalReportsForCrimeCodePerDayBetweenReportedDateQuery2(
     Integer crimeCode, LocalDate from, LocalDate to) {
     return jdbcTemplate
       .query("""
-               SELECT count(*) total
+               SELECT rc.date_reported, COUNT(*) total
                FROM reported_crimes rc
-                        inner join public.reported_crimes_crime_codes rccc ON rc.dr_no = rccc.dr_no
-                        inner join public.crime_codes cc ON cc.crm_cd = rccc.crm_cd
+                        INNER JOIN public.reported_crimes_crime_codes rccc ON rc.dr_no = rccc.dr_no
+                        INNER JOIN public.crime_codes cc ON cc.crm_cd = rccc.crm_cd
                WHERE cc.crm_cd = ? AND
                    rc.date_reported BETWEEN ? AND ?
-               """, BeanPropertyRowMapper.newInstance(Response2.class), crimeCode, from, to);
+               GROUP BY rc.date_reported
+               """, mapperResponseQuery2, crimeCode, from, to);
   }
 
-  public List<Response3> findCommonCrimePerAreaForDate(@NonNull final LocalDate date) {
+  public List<Response3> findCommonCrimePerAreaForDateQuery3(@NonNull final LocalDate day) {
     return jdbcTemplate
       .query("""
-               SELECT cc.crm_cd crime_code, cc.crm_cd_desc crime_description, a.area_name, count(cc.crm_cd) total
+               SELECT cc.crm_cd crime_code, cc.crm_cd_desc crime_description, a.area_name, COUNT(*) total
                FROM reported_crimes rc
-                        inner join public.reported_crimes_crime_codes rccc ON rc.dr_no = rccc.dr_no
-                        inner join public.crime_codes cc ON cc.crm_cd = rccc.crm_cd
-                        inner join public.area a on rc.area = a.area
-               WHERE rc.date_reported = ?
+                        INNER JOIN public.reported_crimes_crime_codes rccc ON rc.dr_no = rccc.dr_no
+                        INNER JOIN public.crime_codes cc ON cc.crm_cd = rccc.crm_cd
+                        INNER JOIN public.area a ON rc.area = a.area
+               WHERE DATE(rc.occ_date_time) = ?
                GROUP BY a.area, cc.crm_cd
                ORDER BY total DESC
-               limit 1
-               """, BeanPropertyRowMapper.newInstance(Response3.class), date);
+               """, mapperResponseQuery3, day);
   }
 
-  public List<Response4> findAverageCrimeOccurrencePerHour(final LocalDateTime from,
-                                                           final LocalDateTime to) {
+  public List<Response4> findAverageCrimeOccurrencePerHourQuery4(final LocalDate from,
+                                                                 final LocalDate to) {
     return jdbcTemplate
       .query(
         """
@@ -87,29 +102,29 @@ public class ReportedCrimeRepository {
           FROM reported_crimes rc
           inner join public.reported_crimes_crime_codes rccc on rc.dr_no = rccc.dr_no
           inner join public.crime_codes cc on cc.crm_cd = rccc.crm_cd
-          WHERE rc.occ_date_time BETWEEN ? AND ?
+          WHERE DATE(rc.occ_date_time) BETWEEN ? AND ?
           GROUP BY per_hour
           ORDER BY per_hour
-          """, BeanPropertyRowMapper.newInstance(Response4.class), from, to);
+          """, mapperResponseQuery4, from, to);
   }
 
-  public List<Response5> findMostCommonCrimeInCoordinatesBoundingBox(LocalDateTime date,
-                                                                     BoundingBoxRequest request) {
+  public List<Response5> findMostCommonCrimeInCoordinatesBoundingBoxQuery5(LocalDate date,
+                                                                           BoundingBoxRequest request) {
     return jdbcTemplate
       .query(
         """
-                  SELECT cc.crm_cd, cc.crm_cd_desc, count(cc.crm_cd) total_crimes
+                  SELECT cc.crm_cd crime_code, cc.crm_cd_desc crime_code_description, count(cc.crm_cd) total_crimes
                   FROM reported_crimes rc
                     INNER JOIN public.reported_crimes_crime_codes rccc ON rc.dr_no = rccc.dr_no
                     INNER JOIN public.crime_codes cc ON cc.crm_cd = rccc.crm_cd
                     INNER JOIN public.location l ON rc.location = l.dr_no
-                  WHERE  rc.occ_date_time = ?
+                  WHERE  rc.date_reported = ?
                     AND l.latitude >= ? AND l.latitude <= ?
                     AND l.longitude >= ? AND l.longitude <= ?
                   GROUP BY cc.crm_cd
                   ORDER BY total_crimes DESC
                   LIMIT 1;
-          """, BeanPropertyRowMapper.newInstance(Response5.class),
+          """, mapperResponseQuery5,
         date,
         request.southLatitude(),
         request.northLatitude(),
@@ -117,12 +132,12 @@ public class ReportedCrimeRepository {
         request.eastLongitude());
   }
 
-  public List<Response6> findTop5AreasWithMostCrimesReportedForSpecificDateRange(final LocalDate from,
-                                                                                 final LocalDate to) {
+  public List<AreaResponse6> findTop5AreasWithMostCrimesReportedForSpecificDateRangeQuery6(final LocalDate from,
+                                                                                           final LocalDate to) {
     return jdbcTemplate
       .query(
         """
-                            SELECT a.area_name, count(cc.crm_cd) total_crimes
+          SELECT a.area_name, COUNT(cc.crm_cd) total_crimes
           FROM reported_crimes rc
                    INNER JOIN public.reported_crimes_crime_codes rccc ON rc.dr_no = rccc.dr_no
                    INNER JOIN public.crime_codes cc ON cc.crm_cd = rccc.crm_cd
@@ -131,30 +146,28 @@ public class ReportedCrimeRepository {
           GROUP BY rc.date_reported, a.area_name
           ORDER BY total_crimes DESC
           LIMIT 5;
-          """, BeanPropertyRowMapper.newInstance(Response6.class),
-        from, to);
+          """, mapperAreaResponseQuery6, from, to);
   }
 
-  public List<Response6> findTop5DistrictsWithMostCrimesReportedForSpecificDateRange(
+  public List<DistrictResponse6> findTop5DistrictsWithMostCrimesReportedForSpecificDateRangeQuery6(
     final LocalDate from,
     final LocalDate to) {
     return jdbcTemplate
       .query(
         """
-                                      SELECT rd.rep_dist, count(cc.crm_cd) total_crimes
+          SELECT rd.rep_dist AS reporting_district, COUNT(cc.crm_cd) total_crimes
           FROM reported_crimes rc
                    INNER JOIN public.reported_crimes_crime_codes rccc ON rc.dr_no = rccc.dr_no
                    INNER JOIN public.crime_codes cc ON cc.crm_cd = rccc.crm_cd
                    INNER JOIN public.reporting_districts rd on rc.reporting_district = rd.rep_dist
-          WHERE rc.date_reported BETWEEN '2020-03-10' AND '2022-03-10'
+          WHERE rc.date_reported BETWEEN ? AND ?
           GROUP BY rc.date_reported, rd.rep_dist
           ORDER BY total_crimes DESC
           LIMIT 5;
-          """, BeanPropertyRowMapper.newInstance(Response6.class),
-        from, to);
+          """, mapperDistrictResponseQuery6, from, to);
   }
 
-  public List<Response7> findPairOfCrimesCoOccurredMostInMostReportedIncidentsArea_7(
+  public List<Response7> findPairOfCrimesCoOccurredMostInMostReportedIncidentsAreaQuery7(
     final LocalDate from,
     final LocalDate to) {
     return jdbcTemplate
@@ -222,13 +235,12 @@ public class ReportedCrimeRepository {
            ORDER BY
                cp.co_occurrence_count DESC
            LIMIT 1;
-          """, BeanPropertyRowMapper.newInstance(Response7.class),
-        from, to);
+          """, mapperResponseQuery7, from, to);
   }
 
-  public List<Response8> findSecondMostCommonCrimeCoOccurredWithParticularCrime_8(
-    final LocalDate from,
-    final LocalDate to) {
+  public List<Response8> findSecondMostCommonCrimeCoOccurredWithParticularCrimeQuery8(
+    final LocalDateTime from,
+    final LocalDateTime to) {
     return jdbcTemplate
       .query(
         """
@@ -277,11 +289,10 @@ public class ReportedCrimeRepository {
               cp.co_occurrence_count DESC
           LIMIT 1
           OFFSET 1;
-          """, BeanPropertyRowMapper.newInstance(Response8.class),
-        from, to);
+          """, mapperResponseQuery8, from, to);
   }
 
-  public List<Response9> findMostCommonWeaponTypeUsedAgainstVictimsDependingOnAgeGroup_9() {
+  public List<Response9> findMostCommonWeaponTypeUsedAgainstVictimsDependingOnAgeGroupQuery9() {
     return jdbcTemplate
       .query(
         """
@@ -337,10 +348,10 @@ public class ReportedCrimeRepository {
               mcw.rank = 1
           ORDER BY
               mcw.age_group_start;
-          """, BeanPropertyRowMapper.newInstance(Response9.class));
+          """, mapperResponseQuery9);
   }
 
-  public List<Response10> findAreaWithLongestTimeRangeWithoutSpecificCrimeOccurrence_10(
+  public List<Response10> findAreaWithLongestTimeRangeWithoutSpecificCrimeOccurrenceQuery10(
     final Integer crimeCode) {
     return jdbcTemplate
       .query(
@@ -404,10 +415,10 @@ public class ReportedCrimeRepository {
               LongestGap lg
                   INNER JOIN
               area a ON lg.area = a.area;
-          """, BeanPropertyRowMapper.newInstance(Response10.class), crimeCode);
+          """, mapperResponseQuery10, crimeCode);
   }
 
-  public List<Response11> findAllAreasThatHaveReceivedAtLeast1ReportInTheSameDayFor2GivenCrimes_11(
+  public List<Response11> findAllAreasThatHaveReceivedAtLeast1ReportInTheSameDayFor2GivenCrimesQuery11(
     final Integer crimeCode1, final Integer crimeCode2) {
     return jdbcTemplate
       .query(
@@ -464,10 +475,10 @@ public class ReportedCrimeRepository {
               area a ON aa.area = a.area
           ORDER BY
               aa.report_date, aa.area;
-          """, BeanPropertyRowMapper.newInstance(Response11.class), crimeCode1, crimeCode2);
+          """, mapperResponseQuery11, crimeCode1, crimeCode2);
   }
 
-  public List<Response12> findRecordsForCrimesReportedOnTheSameDayForDifferentAreasUsingSameWeapon_12(
+  public List<Response12> findRecordsForCrimesReportedOnTheSameDayForDifferentAreasUsingSameWeaponQuery12(
     final LocalDate from,
     final LocalDate to) {
     return jdbcTemplate
@@ -518,6 +529,6 @@ public class ReportedCrimeRepository {
               weapons w ON cg.weapon = w.weapon_used_cd
           ORDER BY
               report_date, record_count DESC;
-          """, BeanPropertyRowMapper.newInstance(Response12.class), from, to);
+          """, mapperResponseQuery12, from, to);
   }
 }

@@ -9,5 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public final class Response2 {
 
+  private String dateReported;
   private Integer total;
 }
