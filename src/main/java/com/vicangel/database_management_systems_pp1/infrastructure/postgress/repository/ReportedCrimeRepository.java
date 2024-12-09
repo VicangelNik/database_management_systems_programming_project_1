@@ -123,7 +123,7 @@ public class ReportedCrimeRepository {
                     AND l.longitude >= ? AND l.longitude <= ?
                   GROUP BY cc.crm_cd
                   ORDER BY total_crimes DESC
-                  LIMIT 1;
+                  LIMIT 1
           """, mapperResponseQuery5,
         date,
         request.southLatitude(),
@@ -145,7 +145,7 @@ public class ReportedCrimeRepository {
           WHERE rc.date_reported BETWEEN ? AND ?
           GROUP BY rc.date_reported, a.area_name
           ORDER BY total_crimes DESC
-          LIMIT 5;
+          LIMIT 5
           """, mapperAreaResponseQuery6, from, to);
   }
 
@@ -163,133 +163,101 @@ public class ReportedCrimeRepository {
           WHERE rc.date_reported BETWEEN ? AND ?
           GROUP BY rc.date_reported, rd.rep_dist
           ORDER BY total_crimes DESC
-          LIMIT 5;
+          LIMIT 5
           """, mapperDistrictResponseQuery6, from, to);
   }
 
-  public List<Response7> findPairOfCrimesCoOccurredMostInMostReportedIncidentsAreaQuery7(
+  public Response7 findPairOfCrimesCoOccurredMostInMostReportedIncidentsAreaQuery7(
     final LocalDate from,
     final LocalDate to) {
     return jdbcTemplate
       .query(
         """
-          WITH AreaIncidentCounts AS (
-               SELECT
-                   rc.area,
-                   COUNT(*) AS incident_count
-               FROM
-                   reported_crimes rc
-               WHERE
-                   rc.occ_date_time BETWEEN ? AND ?
-               GROUP BY
-                   rc.area
-               ORDER BY
-                   incident_count DESC
-               LIMIT 1
-           ),
-          
-           -- Step 2: Find all pairs of crimes within the top area
-               CrimePairs AS (
-                   SELECT
-                       rcc1.crm_cd AS crime1,
-                       rcc2.crm_cd AS crime2,
-                       rc.area,
-                       rc.dr_no
-                   FROM
-                       reported_crimes rc
-                           INNER JOIN
-                       reported_crimes_crime_codes rcc1 ON rc.dr_no = rcc1.dr_no
-                           INNER JOIN
-                       reported_crimes_crime_codes rcc2 ON rc.dr_no = rcc2.dr_no
-                           INNER JOIN
-                       AreaIncidentCounts aic ON rc.area = aic.area
-                   WHERE
-                       rcc1.crm_cd < rcc2.crm_cd  -- Avoid self-pairing and duplication
-               ),
-          
-           -- Step 3: Count occurrences of each pair
-               CrimePairCounts AS (
-                   SELECT
-                       crime1,
-                       crime2,
-                       COUNT(*) AS co_occurrence_count
-                   FROM
-                       CrimePairs
-                   GROUP BY
-                       crime1, crime2
-               )
-          
-           -- Step 4: Find the pair with the highest co-occurrence count
-           SELECT
-               cp.crime1,
-               cp.crime2,
-               c1.crm_cd_desc AS crime1_description,
-               c2.crm_cd_desc AS crime2_description,
-               cp.co_occurrence_count
-           FROM
-               CrimePairCounts cp
-                   INNER JOIN
-               crime_codes c1 ON cp.crime1 = c1.crm_cd
-                   INNER JOIN
-               crime_codes c2 ON cp.crime2 = c2.crm_cd
-           ORDER BY
-               cp.co_occurrence_count DESC
-           LIMIT 1;
-          """, mapperResponseQuery7, from, to);
-  }
-
-  public List<Response8> findSecondMostCommonCrimeCoOccurredWithParticularCrimeQuery8(
-    final LocalDateTime from,
-    final LocalDateTime to) {
-    return jdbcTemplate
-      .query(
-        """
-                     WITH CrimePairs AS (
-                  SELECT
-                      rcc1.crm_cd AS crime1,
-                      rcc2.crm_cd AS crime2,
+                     WITH AreaIncidentCounts AS ( -- Find the area with the most reported incidents within the date range
+              SELECT rc.area,
+                  COUNT(*) AS incident_count
+              FROM reported_crimes rc
+              WHERE rc.occ_date_time BETWEEN ? AND ?
+              GROUP BY rc.area
+              ORDER BY incident_count DESC
+              LIMIT 1),
+              CrimePairs AS ( -- Find all pairs of crimes within the top area
+                  SELECT rcc1.crm_cd AS crimeCode1,
+                      rcc2.crm_cd AS crimeCode2,
+                      rc.area,
                       rc.dr_no
-                  FROM
-                      reported_crimes rc
-                          INNER JOIN
-                      reported_crimes_crime_codes rcc1 ON rc.dr_no = rcc1.dr_no
-                          INNER JOIN
-                      reported_crimes_crime_codes rcc2 ON rc.dr_no = rcc2.dr_no
-                  WHERE
-                      rc.occ_date_time BETWEEN ? AND ?
-                      AND rcc1.crm_cd < rcc2.crm_cd  -- Avoid self-pairing and duplication
+                  FROM reported_crimes rc
+                           INNER JOIN
+                  reported_crimes_crime_codes rcc1 ON rc.dr_no = rcc1.dr_no
+                           INNER JOIN
+                  reported_crimes_crime_codes rcc2 ON rc.dr_no = rcc2.dr_no
+                           INNER JOIN
+                  AreaIncidentCounts aic ON rc.area = aic.area
+                  WHERE rcc1.crm_cd < rcc2.crm_cd -- Avoid self-pairing and duplication
               ),
-          
-          -- Step 3: Count occurrences of each pair
-              CrimePairCounts AS (
-                  SELECT
-                      crime1,
-                      crime2,
+              CrimePairCounts AS ( -- Count occurrences of each pair
+                  SELECT area,
+                      crimeCode1,
+                      crimeCode2,
                       COUNT(*) AS co_occurrence_count
-                  FROM
-                      CrimePairs
-                  GROUP BY
-                      crime1, crime2
-              )
-          
-          -- Step 4: Find the pair with the highest co-occurrence count
-          SELECT
-              cp.crime1,
-              cp.crime2,
+                  FROM CrimePairs
+                  GROUP BY crimeCode1, crimeCode2, area)
+          SELECT -- Find the pair with the highest co-occurrence count
+              a.area_name,
+              cp.crimeCode1,
+              cp.crimeCode2,
               c1.crm_cd_desc AS crime1_description,
               c2.crm_cd_desc AS crime2_description,
               cp.co_occurrence_count
-          FROM
-              CrimePairCounts cp
-                  INNER JOIN
-              crime_codes c1 ON cp.crime1 = c1.crm_cd
-                  INNER JOIN
-              crime_codes c2 ON cp.crime2 = c2.crm_cd
-          ORDER BY
-              cp.co_occurrence_count DESC
+          FROM CrimePairCounts cp
+                   INNER JOIN
+          crime_codes c1 ON cp.crimeCode1 = c1.crm_cd
+                   INNER JOIN
+          crime_codes c2 ON cp.crimeCode2 = c2.crm_cd
+                   INNER JOIN public.area a ON cp.area = a.area
+          ORDER BY cp.co_occurrence_count DESC
           LIMIT 1
-          OFFSET 1;
-          """, mapperResponseQuery8, from, to);
+          """, mapperResponseQuery7, from, to).getFirst();
+  }
+
+  public Response8 findSecondMostCommonCrimeCoOccurredWithParticularCrimeQuery8(
+    final LocalDate from,
+    final LocalDate to) {
+    return jdbcTemplate
+      .query(
+        """
+          WITH CrimePairs AS ( -- Crime pairs
+              SELECT rcc1.crm_cd AS crimeCode1,
+                  rcc2.crm_cd AS crimeCode2,
+                  rc.dr_no
+              FROM reported_crimes rc
+                       INNER JOIN
+              public.reported_crimes_crime_codes rcc1 ON rc.dr_no = rcc1.dr_no
+                       INNER JOIN
+              public.reported_crimes_crime_codes rcc2 ON rc.dr_no = rcc2.dr_no
+              WHERE DATE(rc.occ_date_time) BETWEEN ? AND ? AND
+                  rcc1.crm_cd < rcc2.crm_cd -- Avoid self-pairing and duplication
+          ),
+              CrimePairCounts AS ( -- Count occurrences of each pair
+                  SELECT crimeCode1,
+                      crimeCode2,
+                      COUNT(*) AS co_occurrence_count
+                  FROM CrimePairs
+                  GROUP BY crimeCode1, crimeCode2)
+          SELECT -- Pair with the highest co-occurrence count
+              cp.crimeCode1,
+              cp.crimeCode2,
+              c1.crm_cd_desc AS crime1_description,
+              c2.crm_cd_desc AS crime2_description,
+              cp.co_occurrence_count
+          FROM CrimePairCounts cp
+                   INNER JOIN
+          public.crime_codes c1 ON cp.crimeCode2 = c1.crm_cd
+                   INNER JOIN
+          public.crime_codes c2 ON cp.crimeCode2 = c2.crm_cd
+          ORDER BY cp.co_occurrence_count DESC
+          LIMIT 1 OFFSET 1 -- get the second
+          """, mapperResponseQuery8, from, to).getFirst();
   }
 
   public List<Response9> findMostCommonWeaponTypeUsedAgainstVictimsDependingOnAgeGroupQuery9() {

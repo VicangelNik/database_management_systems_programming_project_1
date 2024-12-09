@@ -9,9 +9,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public final class Response7 {
 
+  private String areaName;
   private Integer crimeCode1;
   private Integer crimeCode2;
-  private String crimeDescription1;
-  private String crimeDescription2;
-  private Integer total;
+  private String crime1Description;
+  private String crime2Description;
+  private Integer coOccurrenceCount;
 }

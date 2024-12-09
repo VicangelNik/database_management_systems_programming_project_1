@@ -71,14 +71,14 @@ public interface ReportedCrimeControllerOpenApi {
    * 7. Find the pair of crimes that has co-occurred in the area with the most reported incidents for
    * a specific date range.
    */
-  ResponseEntity<List<Response7>> findPairOfCrimesCoOccurredMostInMostReportedIncidentsArea(
+  ResponseEntity<Response7> findPairOfCrimesCoOccurredMostInMostReportedIncidentsArea(
     String from, String to);
 
   /**
    * 8. Find the second most common crime that has co-occurred with a particular crime for a specific
    * date range.
    */
-  ResponseEntity<List<Response8>> findSecondMostCommonCrimeCoOccurredWithParticularCrime(String from, String to);
+  ResponseEntity<Response8> findSecondMostCommonCrimeCoOccurredWithParticularCrime(String from, String to);
 
   /**
    * 9. Find the most common type of weapon used against victims depending on their group of age.

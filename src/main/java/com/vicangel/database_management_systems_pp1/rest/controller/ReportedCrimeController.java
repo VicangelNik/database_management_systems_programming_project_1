@@ -130,7 +130,7 @@ class ReportedCrimeController implements ReportedCrimeControllerOpenApi {
 
   @GetMapping(value = "/crime/area/most-co-occurred", produces = MediaType.APPLICATION_JSON_VALUE)
   @Override
-  public ResponseEntity<List<Response7>> findPairOfCrimesCoOccurredMostInMostReportedIncidentsArea(
+  public ResponseEntity<Response7> findPairOfCrimesCoOccurredMostInMostReportedIncidentsArea(
     @RequestParam final String from,
     @RequestParam final String to) {
     return ResponseEntity.ok(repository.findPairOfCrimesCoOccurredMostInMostReportedIncidentsAreaQuery7(
@@ -140,12 +140,12 @@ class ReportedCrimeController implements ReportedCrimeControllerOpenApi {
 
   @GetMapping(value = "/crime/second/most-co-occurred", produces = MediaType.APPLICATION_JSON_VALUE)
   @Override
-  public ResponseEntity<List<Response8>> findSecondMostCommonCrimeCoOccurredWithParticularCrime(
+  public ResponseEntity<Response8> findSecondMostCommonCrimeCoOccurredWithParticularCrime(
     @RequestParam final String from,
     @RequestParam final String to) {
     return ResponseEntity.ok(repository.findSecondMostCommonCrimeCoOccurredWithParticularCrimeQuery8(
-      LocalDateTime.parse(from, OCC_FORMATTER),
-      LocalDateTime.parse(to, OCC_FORMATTER)));
+      LocalDate.parse(from, REPORTED_DATE_FORMATTER),
+      LocalDate.parse(to, REPORTED_DATE_FORMATTER)));
   }
 
   @GetMapping(value = "/crime/victim/weapon/most-common-used", produces = MediaType.APPLICATION_JSON_VALUE)
