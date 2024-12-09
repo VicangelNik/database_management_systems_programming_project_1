@@ -9,9 +9,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public final class Response12 {
 
-  private String dateReported;
+  private String reportDate;
   private Integer weaponCode;
   private String weaponDescription;
   private Integer areaCount;
-  private Integer count;
+  private Integer recordCount;
 }

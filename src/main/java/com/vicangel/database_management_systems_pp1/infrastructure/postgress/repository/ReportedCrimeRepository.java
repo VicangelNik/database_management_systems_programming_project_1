@@ -264,32 +264,25 @@ public class ReportedCrimeRepository {
     return jdbcTemplate
       .query(
         """
-          WITH AgeGroups AS (SELECT (v.vict_age / 5) * 5 AS age_group_start, -- Calculate the lower bound of the group
-                                 (v.vict_age / 5) * 5 + 5 AS age_group_end, -- Calculate the upper bound of the group
-                                 v.dr_no,
-                                 rc.weapon
-                             FROM victim_info v
-                                      INNER JOIN
-                             reported_crimes rc ON v.dr_no = rc.dr_no
-                             WHERE v.vict_age IS NOT NULL -- Exclude records with null age
+          WITH AgeGroups AS ( -- age groups and join the necessary tables
+              SELECT (v.vict_age / 5) * 5 AS age_group_start, -- Calculate the lower bound of the group
+                  (v.vict_age / 5) * 5 + 5 AS age_group_end, -- Calculate the upper bound of the group
+                  v.dr_no,
+                  rc.weapon
+              FROM victim_info v
+                       INNER JOIN
+              reported_crimes rc ON v.dr_no = rc.dr_no
+              WHERE v.vict_age IS NOT NULL -- Exclude records with null age
           ),
-          -- Step 2: Count weapon usage per age group
-              WeaponCounts AS (
-                  SELECT
-                      ag.age_group_start,
+              WeaponCounts AS ( -- Count weapon usage per age group
+                  SELECT ag.age_group_start,
                       ag.age_group_end,
                       ag.weapon,
                       COUNT(*) AS weapon_count
-                  FROM
-                      AgeGroups ag
-                  GROUP BY
-                      ag.age_group_start, ag.age_group_end, ag.weapon
-              ),
-          
-          -- Step 3: Find the most common weapon for each age group
-              MostCommonWeapons AS (
-                  SELECT
-                      wc.age_group_start,
+                  FROM AgeGroups ag
+                  GROUP BY ag.age_group_start, ag.age_group_end, ag.weapon),
+              MostCommonWeapons AS ( -- Find the most common weapon for each age group
+                  SELECT wc.age_group_start,
                       wc.age_group_end,
                       wc.weapon,
                       wc.weapon_count,
@@ -297,25 +290,17 @@ public class ReportedCrimeRepository {
                           PARTITION BY wc.age_group_start, wc.age_group_end
                           ORDER BY wc.weapon_count DESC
                           ) AS rank
-                  FROM
-                      WeaponCounts wc
-              )
-          
-          -- Step 4: Select the top-ranked weapon for each age group
-          SELECT
-              mcw.age_group_start,
+                  FROM WeaponCounts wc)
+          SELECT mcw.age_group_start, -- Select the top-ranked weapon for each age group
               mcw.age_group_end,
               mcw.weapon,
               w.weapon_desc,
               mcw.weapon_count
-          FROM
-              MostCommonWeapons mcw
-                  INNER JOIN
-              weapons w ON mcw.weapon = w.weapon_used_cd
-          WHERE
-              mcw.rank = 1
-          ORDER BY
-              mcw.age_group_start;
+          FROM MostCommonWeapons mcw
+                   INNER JOIN
+          weapons w ON mcw.weapon = w.weapon_used_cd
+          WHERE mcw.rank = 1
+          ORDER BY mcw.age_group_start
           """, mapperResponseQuery9);
   }
 
@@ -324,65 +309,42 @@ public class ReportedCrimeRepository {
     return jdbcTemplate
       .query(
         """
-                    WITH CrimeOccurrences AS (
-              SELECT
-                  rc.area,
-                  rc.occ_date_time
-              FROM
-                  reported_crimes rc
-                      INNER JOIN
-                  reported_crimes_crime_codes rcc ON rc.dr_no = rcc.dr_no
-              WHERE
-                  rcc.crm_cd = ? -- Replace with the specific crime code
+                    WITH CrimeOccurrences AS (SELECT rc.area,
+                                        rc.occ_date_time
+                                    FROM reported_crimes rc
+                                             INNER JOIN
+                                    reported_crimes_crime_codes rcc ON rc.dr_no = rcc.dr_no
+                                    WHERE rcc.crm_cd = ?
           ),
-          
-              TimeGaps AS (
-                  SELECT
-                      area,
-                      occ_date_time AS start_time,
-                        LEAD(occ_date_time) OVER (
-                          PARTITION BY area
-                          ORDER BY occ_date_time
-                          ) AS next_time
-                  FROM
-                      CrimeOccurrences
+              TimeGaps AS (SELECT area,
+                               occ_date_time AS start_time,
+                                 LEAD(occ_date_time) OVER (
+                                   PARTITION BY area
+                                   ORDER BY occ_date_time
+                                   ) AS next_time
+                           FROM CrimeOccurrences),
+              GapsWithDuration AS (SELECT area,
+                                       start_time,
+                                       next_time,
+                                       EXTRACT(EPOCH FROM next_time - start_time) AS gap_duration -- Duration in seconds
+                                   FROM TimeGaps
+                                   WHERE next_time IS NOT NULL -- Exclude the last occurrence as it has no "next"
               ),
-          
-              GapsWithDuration AS (
-                  SELECT
-                      area,
-                      start_time,
-                      next_time,
-                      EXTRACT(EPOCH FROM next_time - start_time) AS gap_duration -- Duration in seconds
-                  FROM
-                      TimeGaps
-                  WHERE
-                      next_time IS NOT NULL -- Exclude the last occurrence as it has no "next"
-              ),
-          
-              LongestGap AS (
-                  SELECT
-                      area,
-                      start_time,
-                      next_time,
-                      gap_duration
-                  FROM
-                      GapsWithDuration
-                  ORDER BY
-                      gap_duration DESC
-                  LIMIT 1
-              )
-          
-          SELECT
-              lg.area,
+              LongestGap AS (SELECT area,
+                                 start_time,
+                                 next_time,
+                                 gap_duration
+                             FROM GapsWithDuration
+                             ORDER BY gap_duration DESC
+                             LIMIT 1)
+          SELECT lg.area,
               a.area_name,
               lg.start_time AS gap_start_time,
               lg.next_time AS gap_end_time,
               lg.gap_duration / 3600 AS gap_duration_hours -- Convert to hours
-          FROM
-              LongestGap lg
-                  INNER JOIN
-              area a ON lg.area = a.area;
+          FROM LongestGap lg
+                   INNER JOIN
+          area a ON lg.area = a.area
           """, mapperResponseQuery10, crimeCode);
   }
 
@@ -391,59 +353,40 @@ public class ReportedCrimeRepository {
     return jdbcTemplate
       .query(
         """
-                       WITH FilteredCrimes AS (
-              SELECT
-                  rc.area,
-                  rcc.crm_cd AS crime_code,
-                  rc.date_reported AS report_date
-              FROM
-                  reported_crimes rc
-                      INNER JOIN
-                  reported_crimes_crime_codes rcc ON rc.dr_no = rcc.dr_no
-              WHERE
-                  rcc.crm_cd IN (510, 998) -- Replace with the 2 crime codes
-          ),
-          
-              CrimeCounts AS (
-                  SELECT
-                      area,
-                      crime_code,
-                      report_date,
-                      COUNT(*) AS report_count
-                  FROM
-                      FilteredCrimes
-                  GROUP BY
-                      area, crime_code, report_date
-                  HAVING
-                      COUNT(*) > 1 -- More than 1 report for the crime
+                    WITH FilteredCrimes AS (SELECT rc.area,
+                                      rcc.crm_cd AS crime_code,
+                                      rc.date_reported AS report_date
+                                  FROM reported_crimes rc
+                                           INNER JOIN
+                                  reported_crimes_crime_codes rcc ON rc.dr_no = rcc.dr_no
+                                  WHERE rcc.crm_cd IN (?, ?)),
+              CrimeCounts AS (SELECT area,
+                                  crime_code,
+                                  report_date,
+                                  COUNT(*) AS report_count
+                              FROM FilteredCrimes
+                              GROUP BY area, crime_code, report_date
+                              HAVING COUNT(*) > 1 -- More than 1 report for the crime
               ),
           
-              AggregatedAreas AS (
-                  SELECT
-                      c1.area,
-                      c1.report_date
-                  FROM
-                      CrimeCounts c1
-                          INNER JOIN
-                      CrimeCounts c2
-                      ON
-                          c1.area = c2.area
-                              AND c1.report_date = c2.report_date
-                              AND c1.crime_code = ? -- Match crime 1
-                              AND c2.crime_code = ? -- Match crime 2
-              )
-          
-          SELECT
-              aa.area,
+              AggregatedAreas AS (SELECT c1.area,
+                                      c1.report_date
+                                  FROM CrimeCounts c1
+                                           INNER JOIN
+                                  CrimeCounts c2
+                                  ON
+                                      c1.area = c2.area
+                                          AND c1.report_date = c2.report_date
+                                          AND c1.crime_code = ?
+                                          AND c2.crime_code = ?)
+          SELECT aa.area,
               a.area_name,
               aa.report_date
-          FROM
-              AggregatedAreas aa
-                  INNER JOIN
-              area a ON aa.area = a.area
-          ORDER BY
-              aa.report_date, aa.area;
-          """, mapperResponseQuery11, crimeCode1, crimeCode2);
+          FROM AggregatedAreas aa
+                   INNER JOIN
+          area a ON aa.area = a.area
+          ORDER BY aa.report_date, aa.area
+          """, mapperResponseQuery11, crimeCode1, crimeCode2, crimeCode1, crimeCode2);
   }
 
   public List<Response12> findRecordsForCrimesReportedOnTheSameDayForDifferentAreasUsingSameWeaponQuery12(
@@ -452,51 +395,37 @@ public class ReportedCrimeRepository {
     return jdbcTemplate
       .query(
         """
-                                 WITH FilteredCrimes AS (
-              SELECT
-                  rc.area,
-                  rc.date_reported AS report_date,
-                  rc.weapon,
-                  rc.dr_no
-              FROM
-                  reported_crimes rc
-              WHERE
-                  rc.date_reported >= ? AND rc.date_reported < ? -- Replace with your time range
-                AND rc.weapon IS NOT NULL -- Exclude cases without a weapon
+                    WITH FilteredCrimes AS (SELECT rc.area,
+                                      rc.date_reported AS report_date,
+                                      rc.weapon,
+                                      rc.dr_no
+                                  FROM reported_crimes rc
+                                  WHERE rc.date_reported BETWEEN ? AND ?
+                                  AND rc.weapon IS NOT NULL -- Exclude cases without a weapon
           ),
-          
-              CrimesGrouped AS (
-                  SELECT
-                      f1.report_date,
-                      f1.weapon,
-                      COUNT(DISTINCT f1.area) AS area_count,
-                      COUNT(*) AS record_count
-                  FROM
-                      FilteredCrimes f1
-                          JOIN
-                      FilteredCrimes f2
-                      ON
-                          f1.weapon = f2.weapon
-                              AND f1.report_date = f2.report_date
-                              AND f1.area <> f2.area -- Ensure the areas are different
-                  GROUP BY
-                      f1.report_date, f1.weapon
-                  HAVING
-                      COUNT(DISTINCT f1.area) > 1 -- More than one area involved
+              CrimesGrouped AS (SELECT f1.report_date,
+                                    f1.weapon,
+                                    COUNT(DISTINCT f1.area) AS area_count,
+                                    COUNT(*) AS record_count
+                                FROM FilteredCrimes f1
+                                         INNER JOIN
+                                FilteredCrimes f2
+                                ON
+                                    f1.weapon = f2.weapon
+                                        AND f1.report_date = f2.report_date
+                                        AND f1.area <> f2.area -- Ensure the areas are different
+                                GROUP BY f1.report_date, f1.weapon
+                                HAVING COUNT(DISTINCT f1.area) > 1 -- More than one area involved
               )
-          
-          SELECT
-              report_date,
-              weapon,
-              w.weapon_desc,
+          SELECT report_date,
+              weapon weapon_code,
+              w.weapon_desc weapon_description,
               area_count,
               record_count
-          FROM
-              CrimesGrouped cg
-                  LEFT JOIN
-              weapons w ON cg.weapon = w.weapon_used_cd
-          ORDER BY
-              report_date, record_count DESC;
+          FROM CrimesGrouped cg
+                   LEFT JOIN
+          weapons w ON cg.weapon = w.weapon_used_cd
+          ORDER BY report_date, record_count DESC
           """, mapperResponseQuery12, from, to);
   }
 }

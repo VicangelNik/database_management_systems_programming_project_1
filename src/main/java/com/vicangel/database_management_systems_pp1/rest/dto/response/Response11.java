@@ -11,5 +11,5 @@ public final class Response11 {
 
   private Integer area;
   private String areaName;
-  private String dateReport;
+  private String reportDate;
 }
