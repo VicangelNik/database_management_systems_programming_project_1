@@ -1,0 +1,581 @@
+{
+	"info": {
+		"_postman_id": "22f43637-6919-4769-a3bf-0d340eae3a2c",
+		"name": "database_systems_pp1",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "13846149"
+	},
+	"item": [
+		{
+			"name": "Find all",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/reports/all",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"reports",
+						"all"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Query 1 - find Total Reports PerCrime Between TimeOccurrence",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/reports/total-per-crime?from=2020-11-30 12:20:00&to=2020-12-31 12:20:00",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"reports",
+						"total-per-crime"
+					],
+					"query": [
+						{
+							"key": "from",
+							"value": "2020-11-30 12:20:00"
+						},
+						{
+							"key": "to",
+							"value": "2020-12-31 12:20:00"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Query 6 - find  top 5 areas based on total crimes reported",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/reports/crime/area/top5?from=2020-11-30&to=2020-12-31",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"reports",
+						"crime",
+						"area",
+						"top5"
+					],
+					"query": [
+						{
+							"key": "from",
+							"value": "2020-11-30"
+						},
+						{
+							"key": "to",
+							"value": "2020-12-31"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Query 6 - find  top 5 districts based on total crimes reported",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/reports/crime/district/top5?from=2020-11-30&to=2020-12-31",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"reports",
+						"crime",
+						"district",
+						"top5"
+					],
+					"query": [
+						{
+							"key": "from",
+							"value": "2020-11-30"
+						},
+						{
+							"key": "to",
+							"value": "2020-12-31"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Query 5 - find Most Common Crime in Coordinates Bounding Box",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"southLatitude\": 34,\n    \"northLatitude\": 38,\n    \"westLongitude\": -118.29,\n    \"eastLongitude\": -118\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/reports/crime/bounding-box-coordinates?day=2020-05-26",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"reports",
+						"crime",
+						"bounding-box-coordinates"
+					],
+					"query": [
+						{
+							"key": "day",
+							"value": "2020-05-26"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Query 2 - find Total Reports for Crime per date Between TimeOccurrence",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/reports/crime/341?from=2020-11-30&to=2020-12-31",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"reports",
+						"crime",
+						"341"
+					],
+					"query": [
+						{
+							"key": "from",
+							"value": "2020-11-30"
+						},
+						{
+							"key": "to",
+							"value": "2020-12-31"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Query 7 - find most co-occured crimes in area with most reported incidents",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/reports/crime/area/most-co-occurred?from=2020-11-30&to=2020-12-31",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"reports",
+						"crime",
+						"area",
+						"most-co-occurred"
+					],
+					"query": [
+						{
+							"key": "from",
+							"value": "2020-11-30"
+						},
+						{
+							"key": "to",
+							"value": "2020-12-31"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Query 9 - find Most Common Weapon Type Used Against Victims Depending On Age Group",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/reports/crime/victim/weapon/most-common-used",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"reports",
+						"crime",
+						"victim",
+						"weapon",
+						"most-common-used"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Query 10 - find Area With Longest Time Range Without Specific Crime Occurrence",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/reports/crime/400/area",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"reports",
+						"crime",
+						"400",
+						"area"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Query 11 - find All Areas That Have Received At Least 1 Report In The Same Day For 2 Given Crimes",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/reports/crime/area/all?crimeCode1=510&crimeCode2=998",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"reports",
+						"crime",
+						"area",
+						"all"
+					],
+					"query": [
+						{
+							"key": "crimeCode1",
+							"value": "510"
+						},
+						{
+							"key": "crimeCode2",
+							"value": "998"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Query 8 - find most co-occured crimes in area with most reported incidents",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/reports/crime/second/most-co-occurred?from=2020-01-01&to=2024-12-30",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"reports",
+						"crime",
+						"second",
+						"most-co-occurred"
+					],
+					"query": [
+						{
+							"key": "from",
+							"value": "2020-01-01"
+						},
+						{
+							"key": "to",
+							"value": "2024-12-30"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Query 12 - find Records For Crimes Reported On The Same Day For Different Areas Using Same Weapon",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/reports/crime/area/weapon?from=2020-01-01&to=2021-12-30",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"reports",
+						"crime",
+						"area",
+						"weapon"
+					],
+					"query": [
+						{
+							"key": "from",
+							"value": "2020-01-01"
+						},
+						{
+							"key": "to",
+							"value": "2021-12-30"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Query 4 - find Average number of crimes occured per hour",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/reports/crime/per-hour?from=2020-11-30&to=2020-12-31",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"reports",
+						"crime",
+						"per-hour"
+					],
+					"query": [
+						{
+							"key": "from",
+							"value": "2020-11-30"
+						},
+						{
+							"key": "to",
+							"value": "2020-12-31"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Query 3 - find most common crime per area for specific day",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"from\": \"2020-11-30 12:20:00\",\n  \"to\": \"2020-12-31 12:20:00\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/reports/crime/area/common?day=2023-04-04",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"reports",
+						"crime",
+						"area",
+						"common"
+					],
+					"query": [
+						{
+							"key": "day",
+							"value": "2023-04-04"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
