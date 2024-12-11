@@ -167,9 +167,8 @@ public class ReportedCrimeRepository {
           """, mapperDistrictResponseQuery6, from, to);
   }
 
-  public Response7 findPairOfCrimesCoOccurredMostInMostReportedIncidentsAreaQuery7(
-    final LocalDate from,
-    final LocalDate to) {
+  public Response7 findPairOfCrimesCoOccurredMostInMostReportedIncidentsAreaQuery7(final LocalDate from,
+                                                                                   final LocalDate to) {
     return jdbcTemplate
       .query(
         """
@@ -252,7 +251,7 @@ public class ReportedCrimeRepository {
               cp.co_occurrence_count
           FROM CrimePairCounts cp
                    INNER JOIN
-          public.crime_codes c1 ON cp.crimeCode2 = c1.crm_cd
+          public.crime_codes c1 ON cp.crimeCode1 = c1.crm_cd
                    INNER JOIN
           public.crime_codes c2 ON cp.crimeCode2 = c2.crm_cd
           ORDER BY cp.co_occurrence_count DESC
@@ -264,24 +263,23 @@ public class ReportedCrimeRepository {
     return jdbcTemplate
       .query(
         """
-          WITH AgeGroups AS ( -- age groups and join the necessary tables
+                    WITH AgeGroups AS ( -- age groups and join the necessary tables
               SELECT (v.vict_age / 5) * 5 AS age_group_start, -- Calculate the lower bound of the group
-                  (v.vict_age / 5) * 5 + 5 AS age_group_end, -- Calculate the upper bound of the group
+                  (v.vict_age / 5) * 5 + 4 AS age_group_end, -- Calculate the upper bound of the group
                   v.dr_no,
                   rc.weapon
               FROM victim_info v
-                       INNER JOIN
-              reported_crimes rc ON v.dr_no = rc.dr_no
+                       INNER JOIN reported_crimes rc ON v.dr_no = rc.dr_no
               WHERE v.vict_age IS NOT NULL -- Exclude records with null age
           ),
               WeaponCounts AS ( -- Count weapon usage per age group
                   SELECT ag.age_group_start,
                       ag.age_group_end,
                       ag.weapon,
-                      COUNT(*) AS weapon_count
+                      COUNT(ag.weapon) AS weapon_count
                   FROM AgeGroups ag
                   GROUP BY ag.age_group_start, ag.age_group_end, ag.weapon),
-              MostCommonWeapons AS ( -- Find the most common weapon for each age group
+              MostUsedWeapons AS ( -- Find the most used weapon for each age group
                   SELECT wc.age_group_start,
                       wc.age_group_end,
                       wc.weapon,
@@ -293,14 +291,14 @@ public class ReportedCrimeRepository {
                   FROM WeaponCounts wc)
           SELECT mcw.age_group_start, -- Select the top-ranked weapon for each age group
               mcw.age_group_end,
-              mcw.weapon,
-              w.weapon_desc,
-              mcw.weapon_count
-          FROM MostCommonWeapons mcw
-                   INNER JOIN
-          weapons w ON mcw.weapon = w.weapon_used_cd
+              mcw.weapon AS weaponCode,
+              w.weapon_desc AS weaponDescription,
+              mcw.weapon_count,
+              mcw.rank
+          FROM MostUsedWeapons mcw
+                   INNER JOIN weapons w ON mcw.weapon = w.weapon_used_cd
           WHERE mcw.rank = 1
-          ORDER BY mcw.age_group_start
+          ORDER BY mcw.age_group_start, mcw.age_group_end
           """, mapperResponseQuery9);
   }
 
