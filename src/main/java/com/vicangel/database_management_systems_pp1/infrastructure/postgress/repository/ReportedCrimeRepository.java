@@ -351,12 +351,11 @@ public class ReportedCrimeRepository {
     return jdbcTemplate
       .query(
         """
-                    WITH FilteredCrimes AS (SELECT rc.area,
+                  WITH FilteredCrimes AS (SELECT rc.area,
                                       rcc.crm_cd AS crime_code,
                                       rc.date_reported AS report_date
                                   FROM reported_crimes rc
-                                           INNER JOIN
-                                  reported_crimes_crime_codes rcc ON rc.dr_no = rcc.dr_no
+                                           INNER JOIN reported_crimes_crime_codes rcc ON rc.dr_no = rcc.dr_no
                                   WHERE rcc.crm_cd IN (?, ?)),
               CrimeCounts AS (SELECT area,
                                   crime_code,
@@ -364,9 +363,7 @@ public class ReportedCrimeRepository {
                                   COUNT(*) AS report_count
                               FROM FilteredCrimes
                               GROUP BY area, crime_code, report_date
-                              HAVING COUNT(*) > 1 -- More than 1 report for the crime
-              ),
-          
+                              HAVING COUNT(*) > 1),
               AggregatedAreas AS (SELECT c1.area,
                                       c1.report_date
                                   FROM CrimeCounts c1
@@ -398,16 +395,15 @@ public class ReportedCrimeRepository {
                                       rc.weapon,
                                       rc.dr_no
                                   FROM reported_crimes rc
-                                  WHERE rc.date_reported BETWEEN ? AND ?
-                                  AND rc.weapon IS NOT NULL -- Exclude cases without a weapon
+                                  WHERE rc.occ_date_time BETWEEN ? AND ? AND
+                                      rc.weapon IS NOT NULL -- Exclude cases without a weapon
           ),
               CrimesGrouped AS (SELECT f1.report_date,
                                     f1.weapon,
                                     COUNT(DISTINCT f1.area) AS area_count,
                                     COUNT(*) AS record_count
                                 FROM FilteredCrimes f1
-                                         INNER JOIN
-                                FilteredCrimes f2
+                                         INNER JOIN FilteredCrimes f2
                                 ON
                                     f1.weapon = f2.weapon
                                         AND f1.report_date = f2.report_date
@@ -416,13 +412,12 @@ public class ReportedCrimeRepository {
                                 HAVING COUNT(DISTINCT f1.area) > 1 -- More than one area involved
               )
           SELECT report_date,
-              weapon weapon_code,
-              w.weapon_desc weapon_description,
+              weapon AS weaponCode,
+              w.weapon_desc AS weaponDescription,
               area_count,
               record_count
           FROM CrimesGrouped cg
-                   LEFT JOIN
-          weapons w ON cg.weapon = w.weapon_used_cd
+                   LEFT JOIN weapons w ON cg.weapon = w.weapon_used_cd
           ORDER BY report_date, record_count DESC
           """, mapperResponseQuery12, from, to);
   }

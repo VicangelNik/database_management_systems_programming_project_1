@@ -53,3 +53,13 @@ Before you begin, ensure you have the following installed:
 
 ```bash
 git clone https://github.com/VicangelNik/database_management_systems_programming_project_1.git
+```
+
+## References
+* https://learnsql.com/blog/sql-rank-over-partition/
+* https://www.sqlshack.com/sql-partition-by-clause-overview/
+* https://bytescout.com/blog/postgresql-advanced-queries.html
+* https://data.lacity.org/Public-Safety/Crime-Data-from-2020-to-Present/2nrs-mtv8/about_data
+* https://www.overleaf.com/read/hzpdvgkwdsfw#65fd54
+* https://neon.tech/postgresql/postgresql-window-function/postgresql-lead-function
+* https://gist.github.com/jsundram/1251783
